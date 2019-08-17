@@ -3,7 +3,7 @@ This is a self created masters programme in Artificial Intelligence, programme i
 
 ------------------Foundation-----------------------
 
-Mathematics:
+------------------Mathematics----------------------
 
 
 1.Linear Algebra:
@@ -20,7 +20,7 @@ Short Course - https://www.udacity.com/course/intro-to-statistics--st101
 
 
 
-Programming:
+-------------------Programming-----------------------
 
 1.Python:
 
@@ -28,11 +28,11 @@ Programming:
 
 
 
-Algorithms:
+-------------------Algorithms------------------------
 
 Short Course - https://www.udacity.com/course/data-structures-and-algorithms-in-python--ud513
 
 
-Data Science:
+-------------------Data Science----------------------
 
 Short Course - https://www.udacity.com/course/intro-to-data-science--ud359
