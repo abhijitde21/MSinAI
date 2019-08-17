@@ -1,7 +1,7 @@
 # MSinAI
 This is a self created masters programme in Artificial Intelligence, programme is catagorized into 3 parts.
 
-.................Foundation Block..................
+...................................Foundation Block.......................................
 
 ------------------Mathematics----------------------
 
