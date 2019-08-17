@@ -5,7 +5,13 @@ This is a self created masters programme in Artificial Intelligence, programme i
 
 Mathematics:
 
-Short Courses
-  1.Linear Algebra - https://www.coursera.org/learn/linear-algebra-machine-learning
-  2.Calculus - https://www.coursera.org/learn/multivariate-calculus-machine-learning
-  3.Probability and Statistics - https://www.udacity.com/course/intro-to-statistics--st101
+Linear Algebra:
+Short Course - https://www.coursera.org/learn/linear-algebra-machine-learning
+
+Calculus:
+Short Course - https://www.coursera.org/learn/multivariate-calculus-machine-learning
+
+Probability and Statistics:
+Short Course - https://www.udacity.com/course/intro-to-statistics--st101
+
+
