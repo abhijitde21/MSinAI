@@ -1,0 +1,319 @@
+---
+title: 'Data Analysis Assignment #1 (50 points total)'
+author: "De, Abhijit"
+output:
+  html_document: default
+---
+
+```{r setup, include = FALSE}
+# DO NOT ADD OR REVISE CODE HERE
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE)
+
+```
+
+
+Submit both the .Rmd and .html files for grading. You may remove the instructions and example problem above, but do not remove the YAML metadata block or the first, "setup" code chunk.  Address the steps that appear below and answer all the questions. Be sure to address each question with code and comments as needed.  You may use either base R functions or ggplot2 for the visualizations.
+
+-----
+
+The following code chunk will:
+
+(a) load the "ggplot2", "gridExtra" and "knitr" packages, assuming each has been installed on your machine,
+(b) read-in the abalones dataset, defining a new data frame, "mydata,"
+(c) return the structure of that data frame, and
+(d) calculate new variables, VOLUME and RATIO.
+
+Do not include package installation code in this document. Packages should be installed via the Console or 'Packages' tab. You will also need to download the abalones.csv from the course site to a known location on your machine. Unless a *file.path()* is specified, R will look to directory where this .Rmd is stored when knitting.
+```{r analysis_setup1, message = FALSE, warning = FALSE}
+
+# a) Load the ggplot2 and gridExtra packages.
+
+#library(ggplot2)
+library(gridExtra)
+library(knitr)
+
+# b) Use read.csv() to read the abalones.csv into R, assigning the data frame to "mydata."
+
+getwd()
+setwd("C:/Users/JM933JS/Downloads/MSDS/Stat/r_code/MSDS401")
+mydata <- read.csv("abalones.csv", sep = ",", stringsAsFactors = TRUE)
+
+
+# c) Use the str() function to verify the structure of "mydata." You should have 1036 observations
+# of eight variables.
+
+str(mydata)
+
+# d) Define two new variables, VOLUME and RATIO. Use th? following statements to define VOLUME and
+# RATIO as variables appended to the data frame "mydata."
+
+mydata$VOLUME <- mydata$LENGTH * mydata$DIAM * mydata$HEIGHT
+mydata$RATIO <- mydata$SHUCK / mydata$VOLUME
+
+```
+
+-----
+
+### Test Items starts from here - There are 6 sections - Total 50 points
+
+***##### Section 1: (6 points) Summarizing the data.***
+
+(1)(a) (1 point) Use *summary()* to obtain and present descriptive statistics from mydata.  Use *table()* to present a frequency table using CLASS and RINGS. There should be 115 cells in the table you present.  
+
+```{r Part_1a}
+
+summary(mydata)
+
+table_class_rings <- table(mydata$CLASS,mydata$RINGS)
+print(table_class_rings)
+
+
+```
+
+**Question (1 point):  Briefly discuss the variable types and distributional implications such as potential skewness and outliers.**
+
+***Answer: We can see there are 3 types of variables which are numerical,integers and factor. From the summary of mydata we get an idea how the data is distributed. Intitial insights tell us that WHOLE, SHUCK, RINGS and VOLUME variables have maximum values which are substantially more than mean and median values. This gives us a starting point to investigate more, there are posibilities of outliers in those mentioned variables which are causing right skewness.***
+
+(1)(b) (1 point) Generate a table of counts using SEX and CLASS. Add margins to this table (Hint: There should be 15 cells in this table plus the marginal totals. Apply *table()* first, then pass the table object to *addmargins()* (Kabacoff Section 7.2 pages 144-14?)).  Lastly, present a barplot of these data; ignoring the marginal totals.  
+
+```{r Part_1b}
+
+table_sex_class <- table(mydata$SEX,mydata$CLASS)
+
+addmargins(table_sex_class)
+
+barplot(table_sex_class,main = "CLASS membership, SEX-differentiated",xlab = "Class",ylab = "Frequency",col = c("red","blue","green"),legend = rownames(table_sex_class),beside = TRUE)
+
+```
+
+**Essay Question (2 points):  Discuss the sex distribution of abalones.  What stands out about the distribution of abalones by CLASS?**
+
+***Answer: The graph above tells us the distribution of the abalones by sex and by class. Class variable is to classify the age of abalons based on the number of rings with A1 being the youngest and A5 being oldest. From the graph it is clear that Infant abalons belong to A1 and A2 which seems ideal. We notice that most of the females and males are in the middle of the distribution, and that both have roughly the same fequency, but that males account for slightly more than females. In addition, infantabalones tend to be right skewed in comparison to male and female abalonedemographics.One interesting thing we can see some infant abalones present in the largest classes A4 and A5 which require more investigate.***
+
+(1)(c) (1 point) Select a simple random sample of 200 observations from "mydata" and identify this sample as "work." Use *set.seed(123)* prior to drawing this sample. Do not change the number 123. Note that *sample()* "takes a sample if the specified size from the elements of x." We cannot sample directly from "mydata." Instead, we need to sample from the integers, 1 to 1036, representing the rows of "mydata." Then, select those rows from the data frame (Kabacoff Section 4.10.5 page 87)? 
+
+Using "work", construct a scatterplot matrix of variables 2-6 with *plot(work[, 2:6])* (these are the continuous variables excluding VOLUME and RATIO). The sample "work" will not be used in the remainder of the assignment. 
+
+```{r Part_1c}
+
+set.seed(123)
+
+work <- mydata[sample(1:nrow(mydata),200,replace = FALSE),]
+
+plot(work[,2:6])
+
+```
+
+
+***##### Section 2: (5 points) Summarizing the data using graphics.***
+
+(2)(a) (1 point) Use "mydata" to plot WHOLE versus VOLUME. Color code data points by CLASS.
+
+```{r Part_2a}
+
+plot(mydata$WHOLE,mydata$VOLUME,main = "Whole weight, in grams | Volume, cm^3",xlab = "Volume",ylab = "Whole weight",pch = 19,col = mydata$CLASS)
+
+legend(x = "bottomright",pch= 19,legend = levels(mydata$CLASS),col = unique(mydata$CLASS))
+
+```
+
+
+(2)(b) (2 points) Use "mydata" to plot SHUCK versus WHOLE with WHOLE on the horizontal axis. Color code data points by CLASS. As an aid to interpretation, determine the maximum value of the ratio of SHUCK to WHOLE.  Add to the chart a straight line with zero intercept using this maximum value as the slope of the line. If you are using the 'base R' *plot()* function, you may use *abline()* to add this line to the plot. Use *help(abline)* in R to determine the coding for the slope and intercept arguments in the functions. If you are using ggplot2 for visualizations, *geom_abline()* should be used.
+
+```{r Part_2b}
+
+plot(mydata$WHOLE, mydata$SHUCK, main = "Whole weight, in grams | Shuck weight, in grams",xlab = "Whole weight", ylab = "Shuck weight",pch = 19, col = mydata$CLASS)
+
+abline(a = 0,b = max(mydata$SHUCK/mydata$WHOLE))
+
+legend(x = "bottomright",pch= 19,legend = levels(mydata$CLASS),col = unique(mydata$CLASS))
+
+```
+
+**Essay Question (2 points):  How does the variability in this plot differ from the plot in (a)?  Compare the two displays.  Keep in mind that SHUCK is a part of WHOLE.  Consider the location of the different age classes.**
+
+***Answer: Answer: Shuck VS Whole weight graph seemed more consistent and grouped together compared to Whole weight VS volume. It seems that the location of A5 is now mostly below the other points as opposed to what we saw in the plot in part (a). This may suggest that weight of the shell (in grams) is greater than the shuck for older classes. In other words, as an abalone gets older, shell growth is faster than shuck growth. if we analyze from younger to older, we can see that older ones (A4, A5) start concentrating downwards as opposed to the younger ones(A1, A2) which are closer to the trend line.  ***
+
+-----
+
+
+***### Section 3: (8 points) Getting insights about the data using graphs.***
+
+(3)(a) (2 points) Use "mydata" to create a multi-figured plot with histograms, boxplots and Q-Q plots of RATIO differentiated by sex. This can be done using *par(mfrow = c(3,3))* and base R or *grid.arrange()* and ggplot2. The first row would show the histograms, the second row the boxplots and the third row the Q-Q plots. Be sure these displays are legible.  
+
+```{r Part_3a}
+
+par(mfrow = c(3,3))
+
+#histograms
+hist(mydata$RATIO[mydata$SEX == "I"],col = "red",main = "Infant Ratio",xlab = "")
+hist(mydata$RATIO[mydata$SEX == "F"],col = "green",main = "Female Ratio",xlab = "")
+hist(mydata$RATIO[mydata$SEX == "M"],col = "blue",main = "Male Ratio",xlab = "")
+
+#boxplots
+boxplot(mydata$RATIO[mydata$SEX == "I"],col = "red",main = "Ifant Ratio",xlab = "")
+boxplot(mydata$RATIO[mydata$SEX == "F"],col = "green",main = "Female Ratio",xlab = "")
+boxplot(mydata$RATIO[mydata$SEX == "M"],col = "blue",main = "Male Ratio",xlab = "")
+
+#QQ plots
+qqnorm(mydata$RATIO[mydata$SEX == "I"],col = "red",main = "Infant Ratio")
+qqline(mydata$RATIO[mydata$SEX == "I"])
+qqnorm(mydata$RATIO[mydata$SEX == "F"],col = "green",main = "Female Ratio")
+qqline(mydata$RATIO[mydata$SEX == "F"])
+qqnorm(mydata$RATIO[mydata$SEX == "M"],col = "blue",main = "Male Ratio")
+qqline(mydata$RATIO[mydata$SEX == "M"])
+
+```
+
+**Essay Question (2 points): Compare the displays.  How do the distributions compare to normality? Take into account the criteria discussed in the sync sessions to evaluate non-normality.**
+
+***Answer: The theoretical quantiles indicate that the graphs appear to closely resemble a typical normal distribution. Though on the upper right side of the graph, the numbers appear to be departing from normality for all three sex classes. This is also evident in the histograms for all sex groups, which show a right skew driven by outliers. We can see that there are outliers present according to the boxplots. Boxplots and QQ-plot analysis reveal that the Infant group appears to contain more outliers than the other groups. ***
+
+(3)(b) (2 points) The boxplots in (3)(a) indicate that there are outlying RATIOs for each sex. *boxplot.stats()* can be used to identify outlying values of a vector. Present the abalones with these outlying RATIO values along with their associated variables in "mydata". Display the observations by passing a data frame to the kable() function. Basically, we want to output those rows of "mydata" with an outlying RATIO, but we want to determine outliers looking separately at infants, females and males.
+
+```{r Part_3b}
+
+#infants outliers
+i_outlier <- boxplot.stats(mydata$RATIO[mydata$SEX == "I"])$out
+i_df <- mydata[mydata$SEX == "I" & mydata$RATIO %in% i_outlier,]
+
+#females outliers
+f_outlier <- boxplot.stats(mydata$RATIO[mydata$SEX == "F"])$out
+f_df <- mydata[mydata$SEX == "F" & mydata$RATIO %in% f_outlier,]
+
+#males outliers
+m_outlier <- boxplot.stats(mydata$RATIO[mydata$SEX == "M"])$out
+m_df <- mydata[mydata$SEX == "M" & mydata$RATIO %in% m_outlier,]
+
+#all outliers
+all_outlier <- rbind(i_df,f_df,m_df)
+kable(all_outlier)
+
+```
+
+***Essay Question (2 points):  What are your observations regarding the results in (3)(b)***
+
+***Answer: Of the three sexes, infant abalones have the highest amount of outliers compared to the male and female abalones.A good majority of theoutliers listed above are in classes A1, A2, and A3. Female and Male abalone outliers primarily in A3, infant abalones primarily in A1.***
+
+-----
+
+***### Section 4: (8 points) Getting insights about possible predictors.***
+
+(4)(a) (3 points) With "mydata," display side-by-side boxplots for VOLUME and WHOLE, each differentiated by CLASS here should be five boxes for VOLUME and five for WHOLE. Also, display side-by-side scatterplots:  VOLUME and WHOLE versus RINGS. Present these four figures in one graphic:  the boxplots in one row and the scatterplots in a second row. Base R or ggplot2 may be used.
+
+
+```{r Part_4a}
+
+par(mfrow = c(2,2))
+
+#boxplots 
+boxplot(mydata$VOLUME ~ mydata$CLASS,col = "green",main = "Volume differentiated by Class",xlab = "",ylab = "Volume")
+boxplot(mydata$WHOLE ~ mydata$CLASS,col = "blue",main = "Whole differentiated by Class",xlab = "",ylab = "Whole")
+
+#scatterplots
+plot(mydata$RINGS,mydata$VOLUME,main = "Volume | Rings",xlab = "Rings",ylab = "Volume",col = "red")
+plot(mydata$RINGS,mydata$WHOLE,main = "Whole | Rings",xlab = "Rings",ylab = "Whole",col = "orange")
+
+```
+
+**Essay Question (5 points) How well do you think these variables would perform as predictors of age?  Explain.**
+
+***Answer: The variables Volume, Whole and Rings are good predictors of age. Since the more rings an abalone has, the greaters its age; we can say from the grap that these variables have an upwards trend. Both volume and Whole increase as the abalones have more rings. Though they are scattered in some places in scaterplots but they do work as a general indicator of age. However from the boxplots we can see older clases have majority of volume and whole which indicate as abalone aged those variables increased but class is not as much of adetermining factor for an abalone's age, since we did find infants in classes A4 and A5 in our previous analysis. ***
+
+-----
+
+***### Section 5: (12 points) Getting insights regarding different groups in the data.***
+
+(5)(a) (2 points) Use *aggregate()* with "mydata" to compute the mean values of VOLUME, SHUCK and RATIO for each combination of SEX and CLASS. Then, using *matrix()*, create matrices of the mean values. Using the "dimnames" argument within *matrix()* or the *rownames()* and *colnames()* functions on the matrices, label the rows by SEX and columns by CLASS. Present the three matrices (Kabacoff Section 5.6?2, p. 110-111). The *kable()* function is useful for this purpose.  You do not need to be concerned with the number of digits presented.
+
+```{r Part_5a}
+
+# aggregate based on class and sex for mean of Volume
+vol_agg <- aggregate(VOLUME ~ SEX + CLASS,data = mydata,FUN = mean)
+vol_matrix <- matrix(data = vol_agg[,3],nrow = 3,byrow = FALSE)
+colnames(vol_matrix) <- c("A1","A2","A3","A4","A5")
+rownames(vol_matrix) <- c("Volume: F", "Volume: I", "Volume: M")
+
+# aggregate based on class and sex for mean of Shuck
+shu_agg <- aggregate(SHUCK ~ SEX + CLASS,data = mydata,FUN = mean)
+shu_matrix <- matrix(data = shu_agg[,3],nrow = 3,byrow = FALSE)
+colnames(shu_matrix) <- c("A1","A2","A3","A4","A5")
+rownames(shu_matrix) <- c("Shuck: F", "Shuck: I", "Shuck: M")
+
+# aggregate based on class and sex for mean of Ratio
+rat_agg <- aggregate(RATIO ~ SEX + CLASS,data = mydata,FUN = mean)
+rat_matrix <- matrix(data = rat_agg[,3],nrow = 3,byrow = FALSE)
+colnames(rat_matrix) <- c("A1","A2","A3","A4","A5")
+rownames(rat_matrix) <- c("Ratio: F", "Ratio: I", "Ratio: M")
+
+#printing matrices
+kable(vol_matrix)
+kable(shu_matrix)
+kable(rat_matrix)
+
+```
+
+(5)(b) (3 points) Present three graphs. Each graph should include three lines, one for each sex. The first should show mean RATIO versus CLASS; the second, mean VOLUME versus CLASS; the third, mean SHUCK versus CLASS. This may be done with the 'base R' *interaction.plot()* function or with ggplot2 using *grid.arrange()*.
+
+```{r Part_5b}
+
+# Mean Ratio vs Class for each sex
+interaction.plot(x.factor = mydata$CLASS,response = mydata$RATIO,trace.factor = mydata$SEX,fun = mean,trace.label = "Sex",main = "Mean Ratio per Class",xlab = "Class",ylab = "Mean Ratio",col = c("red","green","blue"),lty = 1)
+
+# Mean Volume vs Class for each sex
+interaction.plot(x.factor = mydata$CLASS,response = mydata$VOLUME,trace.factor = mydata$SEX,fun = mean,trace.label = "Sex",main = "Mean Volume per Class",xlab = "Class",ylab = "Mean Volume",col = c("red","green","blue"),lty = 1)
+
+# Mean Shuck vs Class for each sex
+interaction.plot(x.factor = mydata$CLASS,response = mydata$SHUCK,trace.factor = mydata$SEX,fun = mean,trace.label = "Sex",main = "Mean Shuck per Class",xlab = "Class",ylab = "Mean Shuck",col = c("red","green","blue"),lty = 1)
+
+```
+
+***Essay Question (2 points):  What questions do these plots raise? Consider aging and sex differences.***
+
+***Answer: The proportion of flesh, as indicated by the mean ratio, appears to significantly decrease as the abalones get older. In relation to the size of the abalone, this indicates that there is less meat. We can see that the volume of females is larger than males as the abalones age. It also seems that both females and males peak in volume in class A4 as opposed to infants, which increase slightly as they age to class A5.The graph also shows that class A4 has the highest mean shuck across all sex classes. This raises the question of whether shuck from abalones stops growing after class A4. ***
+
+5(c) (3 points) Present four boxplots using *par(mfrow = c(2, 2)* or *grid.arrange()*. The first line should show VOLUME by RINGS for the infants and, separately, for the adults factor levels "M" and "F," combined. The second line should show WHOLE by RINGS for the infants and, separately, for the adults. Since the data are sparse beyond 15 rings, limit the displays to less than 16 rings. One way to accomplish this is to generate a new data set using subset() to select RINGS < 16.  Use ylim = c(0, 1100) for VOLUME and ylim = c(0, 400) for WHOLE.  If you wish to reorder the displays for presentation purposes or use ggplot2 go ahead.
+
+```{r Part_5c}
+
+par(mfrow = c(2,2))
+
+#limited data set
+limited_mydata <- subset(mydata,mydata$RINGS < 16)
+
+#Volume by Rings boxplots for infants
+boxplot(limited_mydata$VOLUME[limited_mydata$SEX == "I"] ~ limited_mydata$RINGS[limited_mydata$SEX == "I"],main = "Infant Volume | Rings",ylim = c(0,1100),col = "blue",xlab = "Rings",ylab = "Volume")
+
+#Volume by Rings boxplots for adults
+boxplot(limited_mydata$VOLUME[limited_mydata$SEX != "I"] ~ limited_mydata$RINGS[limited_mydata$SEX != "I"],main = "Adults Volume | Rings",ylim = c(0,1100),col = "red",xlab = "Rings",ylab = "Volume")
+
+#Whole by Rings boxplots for infants
+boxplot(limited_mydata$WHOLE[limited_mydata$SEX == "I"] ~ limited_mydata$RINGS[limited_mydata$SEX == "I"],main = "Infant Whole | Rings",ylim = c(0,400),col = "green",xlab = "Rings",ylab = "Whole")
+
+#Whole by Rings boxplots for adults
+boxplot(limited_mydata$WHOLE[limited_mydata$SEX != "I"] ~ limited_mydata$RINGS[limited_mydata$SEX != "I"],main = "Adults Whole | Rings",ylim = c(0,400),col = "orange",xlab = "Rings",ylab = "Whole")
+
+```
+
+**Essay Question (2 points)?  What do these displays suggest about abalone growth?  Also, compare the infant and adult displays.  What differences stand out?**
+
+***Answer: According to these graphs, adult abalone growth varies more than that of young abalones. This can be seen by comparing the longer whiskers on the adult graphs to the shorter whiskers on the infant graphs. We can see that both adults volume and adults whole tends to be more dispersed as the number of rings grows. The graphs also suggest that Volume and Whole also tend to increase with the number of rings.  ***
+
+-----
+
+***### Section 6: (11 points) Conclusions from the Exploratory Data Analysi? (EDA).***
+
+
+**Conclusions**
+
+**Essay Question 1) (5 points)	Based solely on these data, what are plausible statistical reasons that explain the failure of the original study? Consider to what extent physical measurements may be used for age prediction.**
+
+***Answer: There were many outliers found in the data, and the data had not been corrected for the outliers. Many of the visual graphs displayed right-skewed tendencies, and the QQ plots had a noticeable curve to it. This should be addressed in order to achieve normality of the data and an approximation of the normal distribution. In addition, regarding the sex classification: it was noticeable that the infant category spanned all five classes. As it's unclear as to how the abalones were categorized, some infants might have been categorized as adults and vice versa. Measuring qualitative factors without accounting for human error or bias may have contributed to the original study's failure. Physical measurements may be used for age prediction to a certain extent. Weight, Volume, Shuck and Ratio are definitely a good measures. However nothing was included regarding the observed abalone environment: where these abalones were picked up, or if there were any environmental or food factors that would have promoted greater growth and ratios in some abalones compared to others.  ***
+
+**Essay Question 2) (3 points) Do not refer to the abalone data or study.  If you were presented with an overall histogram and summary statistics from a sample of some population or phenomenon and no other information, what questions might you ask before accepting them as representative of the sampled population or phenomenon?**
+
+***Answer: Primary question is understanding what the sample size of the data is and how it was retrieved for validity purposes. Then I will ask what is the mean of the sample distribution? What is the standard deviation of the sample distribution? Is the data symmetrical about its mean? I would examine the measures of central tendency. Also I will ask Is there a presence of outliers? How many data points are being given in the sample?  ***
+
+**Essay Question 3)  (3 points)	Do not refer to the abalone data or study.  What do you see as difficulties analyzing data derived from observational studies? Can causality be determined?  What might be learned from such studies?**
+
+***Answer: Data from observational studies have the disadvantage of having measurement errors as the measured values must be manually recorded. It is also possible that observational studies may lead to biases. Data correlation may be detected and may be interpreted as causality without investigating the underlying factors affecting such relationships. It is possible that a purely observational study may yield some causality in some cases, but it is prone to. From observational studies we can learn about relationship between the independent and the dependent variables. We might discover other variables which could perhaps have a strong correlation and a causality effect.  ***

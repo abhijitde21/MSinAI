@@ -1,0 +1,202 @@
+---
+title: "Take Home Exam"
+author: "De, Abhijit"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include = FALSE}
+# DO NOT ADD OR REVISE CODE HERE
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
+
+```
+
+-----
+
+***Data is collected for COVID 19 from the given link - https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide for analysis. *** 
+
+```{r analysis_setup1, message = FALSE, warning = FALSE}
+
+#Loading the packages.
+
+library(gridExtra)
+library(knitr)
+library(tinytex)
+library(forecast)
+
+#reading the downloaded covid data from the link given, assigning the data frame to "covid_data".
+
+getwd()
+setwd("C:/Users/JM933JS/Downloads/MSDS/Stat/r_code/MSDS401")
+
+covid_data <- read.csv("data.csv")
+
+
+# c) Using str() function to verify the structure of "covid_data", it has 61900 observations and 12 variables.
+
+str(covid_data)
+
+
+```
+
+-----
+
+***##### Question 1: Descriptive Statistics: Do an Exploratory Data Analysis (EDA) and provide appropriate summary statistics / visualizations to help understand the spread of the disease (incidence) as well as its fatality rate. ***
+
+
+```{r Part_1a}
+
+#calculating incidence per day which I am assuming is equal to number of cases per day
+incidence <- covid_data$cases
+summary(incidence)
+
+#calculating fatality rate by dividing number of deaths with number of cases per day
+fatality_rate <- covid_data$deaths/covid_data$cases
+summary(fatality_rate)
+
+#there are few records with "NA" values I am converting "NA" values to "0" for calculation
+fatality_rate[is.na(fatality_rate)] = 0
+
+#plotting histogram for number of incidence per day
+par(mfrow = c(1,1))
+hist(incidence,main = "Histogram for Incidence per day",xlab = "Incidence",col = "red")
+
+#plotting histogram for fatality rate per day
+par(mfrow = c(1,1))
+hist(fatality_rate,main = "Histogram for Fatality Rate per day",xlab = "Fatality Rate",col = "green")
+
+#plotting scatter plot for number of incidence based on month
+par(mfrow = c(1,1))
+plot(covid_data$month,incidence,main = "Incidence based on Month",xlab = "Months",ylab = "Incidences",col = "purple")
+
+#plotting scatter plot for fatality rate based on month
+par(mfrow = c(1,1))
+plot(covid_data$month,fatality_rate,main = "Fatality Rate based on Month",xlab = "Months",ylab = "Fatality Rates",col = "orange")
+
+
+```
+
+***Discussion for Question 1: Spread of disease, or incidences, can be calculated using cases, assuming 1 case = 1 incidence per day. Fatality rate is the number of deaths per number of cases in a day. Summary statistics is generated, along with histograms of Incidences and Fatality Rates, and scatter plots of Incidences and Fatality Rates by month. Summary statistics provide the minimum, maximum and average number of cases of covid-19 and fatality rate. Histogram shows the concentration of cases and fatality rate. Scatter plot shows the month wise cases and month wise fatality rate of covid-19 disease. ***
+
+***##### Question 2: Inferential Statistics: Pick 2 countries and compare their incidence and fatality rates using hypothesis testing and confidence interval methods. ***  
+
+```{r Part_1b}
+
+#I have taken India and United States of America countries to perform inferential statistics
+
+#Extracting records for India  
+covid_data_india <- subset(covid_data,covid_data$countriesAndTerritories=="India")
+str(covid_data_india)
+
+#Extracting records for United States of America
+covid_data_usa <- subset(covid_data,covid_data$countriesAndTerritories=="United_States_of_America")
+str(covid_data_usa)
+
+#calculating incidence per day for India
+covid_data_india_incidence <- covid_data_india$cases
+summary(covid_data_india_incidence)
+
+#calculating incidence per day for USA
+covid_data_usa_incidence <- covid_data_usa$cases
+summary(covid_data_usa_incidence)
+
+#histogram plotting of incidence for both countries
+par(mfrow = c(1,2))
+hist(covid_data_india_incidence,main = "Incidence distribution for India",xlab = "Incidence",col = "red")
+hist(covid_data_usa_incidence,main = "Incidence distribution for USA",xlab = "Incidence",col = "blue")
+par(mfrow = c(1,1))
+
+#calculating fatality rate per day for India
+covid_data_india_fatality <- covid_data_india$deaths/covid_data_india$cases
+summary(covid_data_india_fatality)
+
+#calculating fatality rate per day for USA
+covid_data_usa_fatality <- covid_data_usa$deaths/covid_data_usa$cases
+summary(covid_data_usa_fatality)
+
+#histogram plotting of fatality rate for both countries
+par(mfrow = c(1,2))
+hist(covid_data_india_fatality,main = "Fatality Rate distribution for India",xlab = "Fatality Rate",col = "purple")
+hist(covid_data_usa_fatality,main = "Fatality Rate distribution for USA",xlab = "Fatality Rate",col = "orange")
+par(mfrow = c(1,1))
+
+# using t.test for hypothesis testing and calculation of confidence interval for incidence of both countries 
+t.test(covid_data_usa_incidence,covid_data_india_incidence,alternative = "two.sided",conf.level = 0.95)
+
+# using t.test for hypothesis testing and calculation of confidence interval for fatality rate of both countries
+t.test(covid_data_usa_fatality,covid_data_india_fatality,alternative = "two.sided",conf.level = 0.95)
+
+```
+
+***Discussion for Question 2: Incidence t test: p value (2.573e-08) < 0.05 alpha level of significance. So, we can reject the null hypothesis, there is significant difference between the incidence of two countries. The 95% confidence interval is (11823.37, 24429.96). The 95% confidence interval shows that out of 100, 95 times the difference between the mean incidence number of countries lies between the given confidence band. ***
+
+***Fatality Rate t test: p value (0.01804) < 0.05 alpha level of significance. So, we can reject the null hypothesis, there is a significant difference between the fatality rate of two countries. The 95% confidence interval is (0.001098985 0.011695363). The 95% confidence interval shows that out of 100, 95 times the difference between the mean fatality rate of countries lies between the given confidence band. ***
+
+***##### Question 3: Correlation: Pick all the countries and evaluate the relationship between incidence rates and fatality rates. Compute the correlation coefficient, if relevant. ***  
+
+```{r Part_1c}
+
+#calculating incidence rate by dividing number of cases with popData2019
+incidence_rate <- covid_data$cases/covid_data$popData2019
+summary(incidence_rate)
+
+#there are few records with "NA" values I am converting "NA" values to "0" for calculation
+incidence_rate[is.na(incidence_rate)] = 0
+
+#plotting scatter plot for incidence rate and fatality rate
+par(mfrow = c(1,1))
+plot(incidence_rate,fatality_rate,main = "Fatality Rate vs Incidence Rate",xlab = "Incidence Rate",ylab = "Fatality Rate",col = "orange")
+
+#using cor.test for correlation check
+cor.test(incidence_rate,fatality_rate,alternative = "two.sided",method = "pearson",conf.level = 0.95)
+
+#using cor for correlation coefficient calculation
+cor(incidence_rate,fatality_rate,method = "pearson")
+
+```
+
+***Discussion for Question 3: The plot shows that there is no relation between fatality rate and incidence rate. So, correlation coefficient cannot be computed which we checked using correlation test and correlation coefficient is "NaN". ***
+
+***##### Question 4: Regression: Pick United States. Look at the time series of cases and time series of deaths. Use a regression model to predict the number of cases and the number of deaths for the next 5 days in the future. *** 
+
+```{r Part_2a}
+
+#Extracting records for United States of America
+covid_data_usa <- subset(covid_data,covid_data$countriesAndTerritories=="United_States_of_America")
+str(covid_data_usa)
+
+#selecting ARIMA model for time series analysis on number of cases for USA
+arima_cases_usa <- auto.arima(covid_data_usa$cases)
+
+#forecasting number of cases for next 5 days with 80% and 95% confidence interval including lower and upper interval
+forecast_cases_usa <- forecast(arima_cases_usa,h = 5)
+print(forecast_cases_usa)
+
+#forecasting number of cases for next 5 days with 95% confidence and upper value
+print(forecast_cases_usa$upper[,2])
+
+#plotting forecasting of cases for next 5 days
+par(mfrow = c(1,1))
+plot(forecast_cases_usa,main = "Forecasts of Cases for next 5 days",col = "green",xlab = "Days",ylab = "Cases")
+
+#selecting ARIMA model for time series analysis on number of deaths for USA
+arima_deaths_usa <- auto.arima(covid_data_usa$deaths)
+
+#forecasting number of deaths for next 5 days with 80% and 95% confidence interval including lower and upper interval
+forecast_deaths_usa <- forecast(arima_deaths_usa,h = 5)
+print(forecast_deaths_usa)
+
+#forecasting number of deaths for next 5 days with 95% confidence and upper value
+print(forecast_deaths_usa$upper[,2])
+
+##plotting forecasting of deaths for next 5 days
+par(mfrow = c(1,1))
+plot(forecast_deaths_usa,main = "Forecasts of Deaths for next 5 days",col = "red",xlab = "Days",ylab = "Deaths")
+
+```
+
+***Discussion for Question 4: The ARIMA model has been selected to do the Time Series Analysis. This particular model forecasts based on its previous values. We can see from both the graphs, the forecasting for next 5 days and purple line at the end of the graph represent the projected values. Forecasting values for cases and deaths are provided with 80% and 95% confidence bands. As well as generated predicted values for cases and deaths for next 5 days with 95% confidence interval with upper values. ***
+
+-----

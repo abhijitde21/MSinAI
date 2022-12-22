@@ -1,0 +1,174 @@
+---
+title: "Boston House Price_Analysis"
+author: "Shreyan Datta Chakraborty"
+date: "17/08/2021"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r Setting the Working Directory and reading the csv file}
+setwd("C:/Users/SRABASHI BASU/Desktop/N W U")
+getwd()
+boston=read.csv("boston.csv", header = TRUE)
+#View(boston)
+head(boston)
+```
+
+
+
+```{r Data Set Manipulation, echo=FALSE}
+## Removing the first column from the data
+boston=boston[,-c(1)]
+head(boston)
+## The 'attach' command lets us write the names of the variables of the dataframe
+## without referencing the data frame every time
+attach(boston)
+## Getting the column names of the data set
+names(boston)
+## Getting the data types
+str(boston)
+##It is always a good practice to declare the categorical variables as factors, so that later there is no confusion regarding data type.
+boston$CHAS = as.factor(boston$CHAS)
+str(boston)
+## Basic Descriptive Statistics
+library(psych)
+describe(boston[-c(4)]) #removing the "CHAS" categorical variable
+```
+
+```{r}
+
+library(ggplot2)
+library(reshape2)
+## Row numbers are removed. Instead two columns are generated as shown below. This is useful if there are many variables for which any task needs to be done repetitively
+melt.boston = melt(boston[-c(4)])
+head(melt.boston)
+
+ggplot(data = melt.boston, aes(x = value)) + 
+geom_histogram() + facet_wrap(~variable, scales = "free")
+
+```
+
+
+We can see from the above set of histograms that quite a few variables are skewed.For prediction problem, skewness of predictors may or may not be of concern. However, normality of the response (MEDV) needs to be checked.
+
+```{r}
+
+hist(MEDV)
+##Checking the normality
+qqnorm(MEDV, pch=19, cex=0.6)
+
+```
+
+```{r}
+##There is some departure from normality. Two transformations are considered.
+##Log Transformation:
+logMEDV = log(MEDV)
+qqnorm(logMEDV, pch=19, cex=0.6)
+
+```
+
+```{r}
+
+##We will try inverting the variable as well.
+invMEDV <- 1/MEDV
+qqnorm(invMEDV, pch=19, cex=0.6)
+
+
+```
+None of these are found to improve normality, though inverse transformation seems to be better than log transformation. 
+For now, we proceed without any transformation.
+There are several predictors, (INDUS, RAD, PTRATIO, TAX etc)  which have disproportional weightage on certain values. Often such variables are discretized, at meaningful thresholds. As an illustration, the variable “RAD” is converted into a categorical variable by grouping different observations together after taking logarithm to adjust for the skewness.
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+#Taking Logarithm of the variable
+boston$RAD_Log = log(boston$RAD)
+
+##Two ways to plot the histogram are given below.
+hist(boston$RAD_Log)
+
+ggplot(data = boston, aes(x = RAD_Log)) + geom_histogram(binwidth = 0.5, boundary=0,color="white",size=2 ) 
+```
+
+
+
+```{r}
+##Bucketing the variable into three categories
+boston$RAD_Cat = ifelse(boston$RAD_Log<1.5,"C_1",ifelse(boston$RAD_Log<3 & boston$RAD_Log>1.5,"C_2",ifelse(boston$RAD_Log>3,"C_3",0)))
+```
+
+
+```{r}
+library(ggplot2)
+
+## Plotting the boxplots of the dependent variable with respect to the newly created categories
+ggplot(data = boston, mapping = aes(x = MEDV,y = RAD_Cat)) + geom_boxplot()
+
+
+```
+
+The variable CHAS indicates whether the neighborhood is near the Charles river and has easy access to the river. A hypothesis testing problem is set up to test whether median house price differ significantly among the neighborhoods with river access and others. 
+H0: Median house price does not depend on river access
+H1: Median house price for neighborhoods with river access is higher than the other neighborhoods
+
+
+
+```{r}
+## Testing a hypothesis based on the "CHAS" variable
+
+CHAS_1 = boston[which(CHAS == 1),]$MEDV
+CHAS_2 = boston[which(CHAS == 0),]$MEDV
+t.test(x = CHAS_1, y = CHAS_2, alternative = "greater" )
+
+```
+Note that p-value for the one-sided test is quite small, indicating that the median price of houses in the neighborhoods with Charles river access is significantly greater than the other neighborhoods.
+Next, a prediction model is built based on all the variables. A multiple regression model is developed.
+
+
+
+```{r}
+model=lm(MEDV~.-RAD_Log-RAD,data = boston)
+summary(model)
+
+```
+
+The model generates 73% R2, indicating adequate fit of the model. Except for INDUS and AGE, all predictors are significant. In the next round, these two predictors are removed and the model is fit. 
+
+
+```{r}
+
+prediction=predict(model,boston)
+head(prediction)
+predicted=predict(model,boston,interval="confidence")
+head(predicted)
+actual=MEDV
+Actual_Pred=data.frame(actual,prediction)
+head(Actual_Pred)
+Actual_Pred$difference=Actual_Pred$actual-Actual_Pred$prediction
+head(Actual_Pred)
+
+
+```
+
+
+
+
+
+
+
+
